@@ -11,36 +11,78 @@ function App() {
   const initialURL = "https://pokeapi.co/api/v2/pokemon";
   const [loading, setLoading] = useState(true);
   const [pokemonData, setPokemonData] = useState([]);
+  const [nextURL, setNextURL] = useState("");
+  const [prevURL, setPrevURL] = useState("");
 
   useEffect(() => {
-    const fetchPokemonData = async () => {
-      // 全てのポケモンデータを取得
-      let res = await getAllPokemon(initialURL);
-
-      // 各ポケモンの詳細データを取得
-      loadPokemon(res.results);
-
-      setLoading(false);
+    const fetchInitialPokemonData = async () => {
+      await fetchAndUpdate(initialURL);
     };
 
-    fetchPokemonData();
+    fetchInitialPokemonData();
   }, []);
+
+  /**
+   * 取得および更新関数
+   * @param {*} url
+   */
+  const fetchAndUpdate = async (url) => {
+    setLoading((loading) => true);
+    const [allPokemonOverview, displayPokemons] = await fetchPokemonData(url);
+    updateEachState(allPokemonOverview, displayPokemons);
+  };
+
+  /**
+   * ポケモン情報取得用関数
+   * @param {*} url
+   * @returns
+   */
+  const fetchPokemonData = async (url) => {
+    // 全てのポケモンデータを取得
+    const allPokemonOverview = await getAllPokemon(url);
+
+    // 各ポケモンの詳細データを取得
+    const displayPokemons = await loadPokemon(allPokemonOverview.results);
+
+    return [allPokemonOverview, displayPokemons];
+  };
+
+  /**
+   * 状態更新用関数
+   * @param {*} allPokemonOverview
+   * @param {*} displayPokemons
+   */
+  const updateEachState = (allPokemonOverview, displayPokemons) => {
+    setPokemonData((pokemonData) => displayPokemons);
+    setLoading((loading) => false);
+    setNextURL((nextURL) => allPokemonOverview.next);
+    setPrevURL((prevURL) => allPokemonOverview.previous);
+  };
 
   /**
    * ポケモンの詳細データを取得
    * @param {*} data
    */
   const loadPokemon = async (data) => {
-    const _pokemonData = await Promise.all(
+    const pokemonData = await Promise.all(
       data.map((pokemon) => {
         let pokemonRecord = getPokemon(pokemon.url);
         return pokemonRecord;
       })
     );
 
-    setPokemonData(_pokemonData);
+    return pokemonData;
   };
-  console.log(pokemonData);
+
+  const handleNextPage = async () => {
+    if (!nextURL) return;
+    fetchAndUpdate(nextURL);
+  };
+
+  const handlePrevPage = () => {
+    if (!prevURL) return;
+    fetchAndUpdate(prevURL);
+  };
 
   return (
     <>
@@ -49,10 +91,16 @@ function App() {
         {loading ? (
           <h1>ロード中...</h1>
         ) : (
-          <div className="pokemon-card-container">
-            {pokemonData.map((pokemon, index) => {
-              return <Card key={index} pokemon={pokemon} />;
-            })}
+          <div>
+            <div className="pokemon-card-container">
+              {pokemonData.map((pokemon, index) => {
+                return <Card key={index} pokemon={pokemon} />;
+              })}
+            </div>
+            <div className="btn">
+              <button onClick={handlePrevPage}>前へ</button>
+              <button onClick={handleNextPage}>次へ</button>
+            </div>
           </div>
         )}
       </div>
