@@ -1,5 +1,6 @@
 import React from "react";
 import "./Card.css";
+import CardInfo from "./CardInfo";
 
 const Card = ({ pokemon }) => {
   return (
@@ -18,21 +19,12 @@ const Card = ({ pokemon }) => {
           );
         })}
       </div>
-      <div className="card-info">
-        <div className="card-data">
-          <p className="title">重さ：{pokemon.weight}</p>
-        </div>
-      </div>
-      <div className="card-info">
-        <div className="card-data">
-          <p className="title">高さ：{pokemon.height}</p>
-        </div>
-      </div>
-      <div className="card-info">
-        <div className="card-data">
-          <p className="title">とくせい：{pokemon.abilities[0].ability.name}</p>
-        </div>
-      </div>
+      <CardInfo param_name={"重さ"} param_val={pokemon.weight} />
+      <CardInfo param_name={"高さ"} param_val={pokemon.height} />
+      <CardInfo
+        param_name={"とくせい"}
+        param_val={pokemon.abilities[0].ability.name}
+      />
     </div>
   );
 };
